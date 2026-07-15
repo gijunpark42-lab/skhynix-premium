@@ -110,7 +110,9 @@ export default function Home() {
                         label:
                           quote.us.latest.session === "PRE"
                             ? "Pre-market"
-                            : "After-hours",
+                            : quote.us.latest.session === "OVERNIGHT"
+                              ? "Overnight (24h)"
+                              : "After-hours",
                         value: fmtUsd(quote.us.latest.price),
                         changePct: fmtPct(quote.us.latest.changePct),
                         changeValue: quote.us.latest.changePct,
@@ -151,7 +153,7 @@ export default function Home() {
           <footer className="pt-2 text-xs leading-relaxed text-[#898781]">
             Premium = SKHY × USD/KRW × 10 ÷ 000660 price − 1. Korean side uses the
             NXT (Nextrade) session when KRX is closed; US side uses pre/after-market
-            when available. Data: Naver Finance (KRX, NXT, FX) and Yahoo Finance
+            and the 24h overnight session when available. Data: Naver Finance (KRX, NXT, FX) and Yahoo Finance
             (SKHY), unofficial feeds — informational only, not investment advice.
           </footer>
         </div>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { fetchKrCandles, fetchKrQuote, fetchFx } from "@/lib/naver";
-import { fetchUsCandles } from "@/lib/yahoo";
+import { fetchKrCandles, fetchKrQuote, fetchFx, selectKrLatest } from "@/lib/naver";
+import { fetchUsCandles, fetchUsQuote } from "@/lib/yahoo";
 import { premiumPct } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
@@ -9,13 +9,15 @@ const WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export async function GET() {
   try {
-    const [krCandles, usCandles, fx, krQuote] = await Promise.all([
+    const [krCandles, usCandles, fx, krQuote, usQuote] = await Promise.all([
       fetchKrCandles(),
       fetchUsCandles(),
       fetchFx(),
       // Naver's minute candles only cover today's KRX session; the previous
       // close anchors the KR side for US-session points before today's open.
       fetchKrQuote().catch(() => null),
+      // Live quote for the tail point: overnight/NXT trades have no candles.
+      fetchUsQuote().catch(() => null),
     ]);
 
     // Merge both series over the union of timestamps, carrying the last-known
@@ -41,6 +43,19 @@ export async function GET() {
           usPrice: lastUs,
         });
       }
+    }
+
+    // Append a live tail point from the freshest price on each side (NXT for
+    // Korea, 24h/overnight for the US) so the chart end matches the hero
+    // premium even when neither market has candles right now.
+    const krLatest = krQuote ? selectKrLatest(krQuote) : null;
+    if (krLatest && usQuote) {
+      series.push({
+        t: Date.now(),
+        premiumPct: premiumPct(usQuote.latest.price, krLatest.price, fx.rate),
+        krPrice: krLatest.price,
+        usPrice: usQuote.latest.price,
+      });
     }
 
     return NextResponse.json(

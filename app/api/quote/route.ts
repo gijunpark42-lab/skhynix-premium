@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchKrQuote, fetchFx } from "@/lib/naver";
+import { fetchKrQuote, fetchFx, selectKrLatest } from "@/lib/naver";
 import { fetchUsQuote } from "@/lib/yahoo";
 import { adrInKrw, parityUsd, premiumPct } from "@/lib/premium";
 
@@ -19,18 +19,7 @@ export async function GET() {
     .filter((r) => r.status === "rejected")
     .map((r) => String((r as PromiseRejectedResult).reason));
 
-  // Latest Korean price: regular session while open, otherwise the NXT
-  // session (Nextrade trades 08:00-20:00 KST, wrapping around KRX hours).
-  let krLatest: { price: number; session: "KRX" | "NXT"; changePct: number | null } | null = null;
-  if (kr) {
-    if (kr.regular.status === "OPEN" && kr.regular.price !== null) {
-      krLatest = { price: kr.regular.price, session: "KRX", changePct: kr.regular.changePct };
-    } else if (kr.nxt?.price != null) {
-      krLatest = { price: kr.nxt.price, session: "NXT", changePct: kr.nxt.changePct };
-    } else if (kr.regular.price !== null) {
-      krLatest = { price: kr.regular.price, session: "KRX", changePct: kr.regular.changePct };
-    }
-  }
+  const krLatest = kr ? selectKrLatest(kr) : null;
 
   let premium = null;
   if (krLatest && us && fx) {

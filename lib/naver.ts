@@ -69,6 +69,25 @@ export async function fetchKrQuote(): Promise<KrQuote> {
   return { regular, nxt, prevClose };
 }
 
+/**
+ * Latest Korean price: regular session while open, otherwise the NXT session
+ * (Nextrade trades 08:00-20:00 KST, wrapping around KRX hours).
+ */
+export function selectKrLatest(
+  kr: KrQuote
+): { price: number; session: "KRX" | "NXT"; changePct: number | null } | null {
+  if (kr.regular.status === "OPEN" && kr.regular.price !== null) {
+    return { price: kr.regular.price, session: "KRX", changePct: kr.regular.changePct };
+  }
+  if (kr.nxt?.price != null) {
+    return { price: kr.nxt.price, session: "NXT", changePct: kr.nxt.changePct };
+  }
+  if (kr.regular.price !== null) {
+    return { price: kr.regular.price, session: "KRX", changePct: kr.regular.changePct };
+  }
+  return null;
+}
+
 export interface FxQuote {
   rate: number;
   tradedAt: string | null;

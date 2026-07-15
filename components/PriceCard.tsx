@@ -10,7 +10,7 @@ export interface SubRow {
 
 export function StatusBadge({ status }: { status: string }) {
   const open = status === "OPEN" || status === "REGULAR" || status === "LIVE";
-  const live = open || status === "PRE" || status === "POST";
+  const live = open || status === "PRE" || status === "POST" || status === "OVERNIGHT";
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium tracking-wide ${

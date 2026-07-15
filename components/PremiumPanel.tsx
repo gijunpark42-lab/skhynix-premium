@@ -7,6 +7,7 @@ const SESSION_LABEL: Record<string, string> = {
   PRE: "US pre-market",
   REGULAR: "US regular",
   POST: "US after-hours",
+  OVERNIGHT: "US 24h (overnight)",
   CLOSED: "US last trade",
 };
 
